@@ -46,9 +46,11 @@ class ShoppingList:
 
     # ---------- Query helpers ----------
     def _normalize_key(self, item_name: str) -> str:
+        # Normalize item names to a consistent key (trim + lowercase)
         return item_name.strip().lower()
 
     def has_item(self, item_name: str) -> bool:
+        # Fast membership check without constructing exceptions
         return self._normalize_key(item_name) in self._items_by_key
 
     def get_item(self, item_name: str) -> ShoppingItem:
@@ -58,10 +60,12 @@ class ShoppingList:
         return self._items_by_key[key]
 
     def list_items(self) -> List[ShoppingItem]:
+        # Return a snapshot list of items (caller can't mutate internal dict)
         return list(self._items_by_key.values())
 
     # ---------- Mutations ----------
     def add_item(self, item_name: str) -> ShoppingItem:
+        # Validate input and enforce uniqueness inside a list
         if not item_name.strip():
             raise ValueError("Item name cannot be empty.")
         key = self._normalize_key(item_name)
@@ -76,7 +80,7 @@ class ShoppingList:
     def mark_item_as_purchased(self, item_name: str) -> None:
         item = self.get_item(item_name)
         if item.purchased:
-            # Idempotent behavior: do nothing but inform the caller
+            # Idempotent behavior: if already purchased, nothing to change
             return
         item.mark_as_purchased()
 
@@ -85,6 +89,7 @@ class ShoppingList:
         header = f"Shopping List: {self.name}"
         if not self._items_by_key:
             return f"{header}\n  (no items)"
+        # Build a multi-line, readable block listing all items
         lines = [header]
         for item in self.list_items():
             lines.append(f"  {str(item)}")
@@ -95,11 +100,12 @@ class ShoppingListApp:
     """High-level application service that manages multiple shopping lists."""
 
     def __init__(self) -> None:
-        # List names are unique (case-insensitive)
+        # Registry of lists keyed by normalized name; enforces uniqueness
         self._lists_by_key: Dict[str, ShoppingList] = {}
 
     # ---------- Internals ----------
     def _normalize_key(self, name: str) -> str:
+        # Normalize list names to a consistent lookup key
         return name.strip().lower()
 
     def _require_list(self, list_name: str) -> ShoppingList:
@@ -110,6 +116,7 @@ class ShoppingListApp:
 
     # ---------- API ----------
     def create_shopping_list(self, name: str) -> ShoppingList:
+        # Create a new list after validating input and duplicates
         if not name.strip():
             raise ValueError("Shopping list name cannot be empty.")
         key = self._normalize_key(name)
@@ -120,10 +127,12 @@ class ShoppingListApp:
         return new_list
 
     def add_item_to_list(self, list_name: str, item_name: str) -> ShoppingItem:
+        # Find target list and delegate item creation
         target_list = self._require_list(list_name)
         return target_list.add_item(item_name)
 
     def mark_item_as_purchased(self, list_name: str, item_name: str) -> None:
+        # Find target list and mark specific item as purchased
         target_list = self._require_list(list_name)
         target_list.mark_item_as_purchased(item_name)
 
@@ -131,6 +140,7 @@ class ShoppingListApp:
         """Return a string representation for all lists and items."""
         if not self._lists_by_key:
             return "No shopping lists created yet."
+        # Join the string blocks of each list with a blank line between
         blocks = []
         for shopping_list in self._lists_by_key.values():
             blocks.append(str(shopping_list))
@@ -149,6 +159,7 @@ class ShoppingListApp:
         print("Shopping List App\n-------------------")
         while True:
             try:
+                # Read user menu choice (strip spaces for safety)
                 choice = input(menu + "> ").strip()
             except (EOFError, KeyboardInterrupt):
                 print("\nExiting...")
@@ -181,6 +192,7 @@ class ShoppingListApp:
                     print(f"Error: {exc}")
 
             elif choice == "4":
+                # Render current state of all lists
                 print("\n" + self.display_all_lists() + "\n")
 
             elif choice == "5":
