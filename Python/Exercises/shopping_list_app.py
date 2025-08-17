@@ -21,7 +21,7 @@ class ShoppingItem:
     
     def display(self):
         """Return a string representation of the item."""
-        status = "✓ -" if self.purchased else "X -"
+        status = "purchased -" if self.purchased else "not purchased -"
         return f"{status} {self.name}"
 
 
@@ -195,8 +195,8 @@ if __name__ == "__main__":
     demo()
     
     # Then start the interactive app
-    print("\nStarting interactive mode...")
-    app = ShoppingApp()
-    app.run()
+    #print("\nStarting interactive mode...")
+    #app = ShoppingApp()
+    #app.run()
 
 
